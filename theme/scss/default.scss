@@ -221,6 +221,10 @@ slides > slide {
         height: 80%;
       }
     }
+    
+    &.no-margin {
+      margin-top: 0px;
+    }
 
     p {
       margin-bottom: 1em;
