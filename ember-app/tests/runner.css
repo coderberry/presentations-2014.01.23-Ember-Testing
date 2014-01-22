@@ -2,8 +2,8 @@
   position: absolute;
   bottom: 0;
   right: 0;
-  width: 640px;
-  height: 384px;
+  width: 240px;
+  height: 200px;
   overflow: auto;
   z-index: 9999;
   border: 1px solid #ccc;
