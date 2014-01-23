@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="utf-8">
-  <title>Ember Starter Kit</title>
+<meta charset="utf-8">
+<title>Ember Starter Kit</title>
   <link rel="stylesheet" href="css/normalize.css">
   <link rel="stylesheet" href="css/style.css">
 </head>
@@ -14,14 +14,14 @@
   </script>
 
   <script type="text/x-handlebars" id="index">
-    <form {{action "addAttendee" on="submit"}}>
-      {{input type="text" value=attendeeName class="attendee-name" placeholder="Name"}}
-      <button type="submit" class="create">Add</button>
+    <form {{action addContact on="submit"}}>
+      {{input type="text" value=name id="name" placeholder="Type Name..."}}
+      <button class="create">Add Contact</button>
     </form>
 
     <ul>
-    {{#each item in model}}
-      <li>{{upcase item.name}}</li>
+    {{#each}}
+      <li>{{upcase first}}</li>
     {{/each}}
     </ul>
   </script>

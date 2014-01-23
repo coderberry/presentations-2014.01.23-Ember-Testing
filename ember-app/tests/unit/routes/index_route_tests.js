@@ -1,7 +1,6 @@
-var route, expectedModel;
-
-module("Unit: Index Route", {
+module("Unit - Routes - Index", {
   setup: function() {
+    App.reset();
     route = App.IndexRoute.create();
   },
   teardown: function() {
@@ -18,14 +17,14 @@ test("it exists", function() {
 
 test("#model", sinon.test(function() {
   expect(2);
+
+  var stub,
+      expectedModel = [
+        { first: "Jon" }
+      ];
+
+  stub = sinon.stub(App.Contact, "find").returns(expectedModel);
   
-  expectedModel = [
-    { name: "Tyler" }
-  ];
-
-  var stub = sinon.stub(App.Attendee, "find")
-                  .returns(expectedModel);
-
-  equal(route.model(), expectedModel, 'model is correct');
-  ok(stub.called);
+  equal(route.model(), expectedModel, "model is correct");
+  ok(stub.called, "App.Attendee.find() was called");
 }));

@@ -7,43 +7,38 @@ App.Router.map(function() {
 });
 
 Ember.Handlebars.helper('upcase', function(value) {
-  Ember.debug(value)
-  if (!Ember.isEmpty(value)) {
-    return value.toUpperCase();
-  } else {
-    return value;
-  }
+  return value.toUpperCase();
 });
 
-App.Attendee = Ember.Object.extend({
-  name: null
-});
-
-App.Attendee.reopenClass({
+App.Contact = Ember.Object.extend({});
+App.Contact.reopenClass({
   find: function() {
-    return ajax('/api/attendees.json').then(function(data) {
-      var records = Em.A([]);
-      data.forEach(function(d) {
-        records.pushObject(
-          App.Attendee.create(d)
-        );
+    var url = "http://addressbook-api.herokuapp.com/contacts",
+        contacts = Em.A([]);
+
+    ajax(url).then(function(data) {
+      data.contacts.forEach(function(c) {
+        var contact = App.Contact.create(c);
+        contacts.pushObject(contact);
       }.bind(this));
-      return records;
     }.bind(this));
+
+    return contacts;
   }
 });
 
 App.IndexRoute = Ember.Route.extend({
   model: function() {
-    return App.Attendee.find();
+    return App.Contact.find();
   }
 });
 
 App.IndexController = Ember.ArrayController.extend({
   actions: {
-    addAttendee: function() {
-      var attendee = App.Attendee.create({ name: this.get('attendeeName') });
-      this.pushObject(attendee);
+    addContact: function() {
+      var name = this.get("name");
+      this.pushObject(App.Contact.create({ first: name }));
+      this.set("name", null);
     }
   }
 });

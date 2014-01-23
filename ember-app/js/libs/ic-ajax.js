@@ -23,10 +23,10 @@
    * and it resolves only the response (no access to jqXHR or textStatus).
    */
 
-  var ajax = function() {
+  function ajax() {
     return ajax.raw.apply(null, arguments).then(function(result) {
       return result.response;
-    });
+    }, null, 'ic-ajax: unwrap raw ajax response');
   };
 
   /*
@@ -34,7 +34,7 @@
    * jqXHR}`, useful if you need access to the jqXHR object for headers, etc.
    */
 
-  ajax.raw = function() {
+  ajax.raw = function ajaxRaw() {
     return makePromise(parseArgs.apply(null, arguments));
   };
 
@@ -76,10 +76,10 @@
       if (fixture) {
         return Ember.run(null, resolve, fixture);
       }
-      settings.success = makeSuccess(resolve, reject);
-      settings.error = makeError(resolve, reject);
+      settings.success = makeSuccess(resolve);
+      settings.error = makeError(reject);
       Ember.$.ajax(settings);
-    });
+    }, 'ic-ajax: ' + (settings.type || 'GET') + ' to ' + settings.url);
   };
 
   function parseArgs() {
@@ -95,12 +95,12 @@
       settings.url = arguments[0];
     }
     if (settings.success || settings.error) {
-      throw new Error("ajax should use promises, received 'success' or 'error' callback");
+      throw new Ember.Error("ajax should use promises, received 'success' or 'error' callback");
     }
     return settings;
   }
 
-  function makeSuccess(resolve, reject) {
+  function makeSuccess(resolve) {
     return function(response, textStatus, jqXHR) {
       Ember.run(null, resolve, {
         response: response,
@@ -110,7 +110,7 @@
     }
   }
 
-  function makeError(resolve, reject) {
+  function makeError(reject) {
     return function(jqXHR, textStatus, errorThrown) {
       Ember.run(null, reject, {
         jqXHR: jqXHR,

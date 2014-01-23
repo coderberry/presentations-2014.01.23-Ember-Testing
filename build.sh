@@ -8,7 +8,6 @@ rm -rf dist
 mkdir dist
 
 cp -aR js dist/js
-cp -aR scripts dist/scripts
 cp -aR theme dist/theme
 cp -aR images dist/images
 cp slide_config.js dist/slide_config.js

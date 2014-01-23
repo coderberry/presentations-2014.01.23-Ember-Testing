@@ -1,9 +1,15 @@
-module("Helpers: upcase");
+module("Unit - Helpers", {
+  setup: function() {
+    App.reset();
+  },
+  teardown: function() {
+  }
+});
 
-test('upcase works', function(){
+test("convert to uppercase", function() {
   var view = createView("{{upcase 'something'}}");
   append(view);
 
   var renderedText = view.$().text();
-  equal(renderedText, 'SOMETHING', "Text rendered: " + renderedText);
+  equal(renderedText, "SOMETHING", "Text rendered: " + renderedText);
 });

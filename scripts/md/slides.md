@@ -15,7 +15,7 @@ Things we'll cover:
 ---
 
 title: Setup
-subtitle: Preparing your Ember App for testing
+subtitle: Preparing your Ember App for Testing
 class: segue dark nobackground
 
 ---
@@ -24,6 +24,15 @@ class: fill nobackground
 
 <img src="images/starter-kit-download.png">
 
+<aside class="note">
+  <section>
+    <ul>
+      <li>Easiest way to get up and running with tests</li>
+      <li>A lot has been done recently with the starter kit</li>
+    </ul>
+    <b>Download the Ember App Kit after all the slides are through.</b>
+  </section>
+</aside>
 ---
 
 title: Setup
@@ -32,7 +41,6 @@ subtitle: index.html
 <pre class="prettyprint" data-lang="html">
 &lt;html&gt;
 &lt;body&gt;
-
   &lt;!-- Handlebars templates go here --&gt;
 
   &lt;script src=&quot;js/libs/jquery-1.10.2.js&quot;&gt;&lt;/script&gt;
@@ -40,9 +48,8 @@ subtitle: index.html
   &lt;script src=&quot;js/libs/ember-1.3.1.js&quot;&gt;&lt;/script&gt;
   &lt;script src=&quot;js/app.js&quot;&gt;&lt;/script&gt;
 
-  &lt;!-- to activate the test runner, add the &quot;?test&quot; query string parameter --&gt;
-  &lt;script src=&quot;tests/runner.js&quot;&gt;&lt;/script&gt;
-
+  <b>&lt;!-- to activate the test runner, add the &quot;?test&quot; query string parameter --&gt;
+  &lt;script src=&quot;tests/runner.js&quot;&gt;&lt;/script&gt;</b>
 &lt;/body&gt;
 &lt;/html&gt;
 </pre>
@@ -84,6 +91,12 @@ App.setupForTesting();
 App.injectTestHelpers();
 </pre>
 
+<aside class="note">
+  <section>
+    <p>This hook defers the readiness of the application, so that you can start the app when your tests are ready to run.</p>
+  </section>
+</aside>
+
 ---
 
 title: Setup
@@ -112,9 +125,9 @@ subtitle: What are integration tests?
 class: big
 build_lists: true
 
-- Test that different parts of the system work together
-- Requires the application to be running (in test mode)
-- Basically emulates a user and watches for expected results
+- They are generally used to test important work flows within your application.
+- They require the application to be running (in test mode)
+- They emulate user interaction and confirms expected results
 
 ---
 
@@ -125,54 +138,51 @@ subtitle: Built-in Test Helpers
   <img src="images/test-helpers.png">
 </div>
 
+<aside class="note">
+  <section>
+    <p>The helpers that perform actions use a global promise object and automatically chain onto that promise object if it exists. This allows you write your tests without worrying about async behaviour your helper might trigger.</p>
+  </section>
+</aside>
+
 ---
 
 title: Integration Tests
 subtitle: TDD Time!
-content_class: flexbox vcenter
 
-![TDD](images/TDD.jpg)
+<div style="text-align: center; margin-top: -60px;">
+  <img src="images/redgreenrefactor.png">
+</div>
 
 ---
 
 title: Integration Tests
 subtitle: TDD Results
 
+<article class="smaller" style="margin-top: -40px;">
 <pre class="prettyprint" data-lang="javascript">
-var listItemSelector = "ul li";
+test("show list of contacts", function() {
+  expect(2)
 
-test("show list of attendees", function() {
   visit("/");
-
   andThen(function() {
-    equal(find(listItemSelector).length, 3, "there are three attendees");
-    equal(find(listItemSelector + ":first").html(), "Eric", "first attendee is Eric");
+    shouldHaveElementWithCount("ul li", 3);
+    equal(find("ul li:first").text(), "Ryan", "Ryan is the first contact");
   });
 });
 
-...
-
----
-
-title: Integration Tests
-subtitle: TDD Results
-
-<pre class="prettyprint" data-lang="javascript">
-...
-
-test("add an attendee via the form", function() {
-  expect(2);
+test("add contact to list", function() {
+  expect(3);
 
   visit("/");
-  fillIn(".attendee-name", "Derek");
-  click("button.create");
-
+  addContact("Jason");
   andThen(function() {
-    equal(find(listItemSelector).length, 4, "4 attendees should exist");
-    equal(find(listItemSelector + ":last").html(), "Derek", "last attendee is Derek");
+    shouldHaveElementWithCount("ul li", 4);
+    equal(find("ul li:last").text(), "Jason", "Jason is the last contact");
+    equal(find("#name").val(), "", "Form has been reset");
   });
 });
 </pre>
+</article>
 
 ---
 
@@ -181,10 +191,10 @@ subtitle: TDD Results
 
 <pre class="prettyprint" data-lang="html">
 &lt;script type=&quot;text/x-handlebars&quot; id=&quot;index&quot;&gt;
-  &lt;form {{action &quot;addAttendee&quot; on=&quot;submit&quot;}}&gt;
-    {{input type=&quot;text&quot; value=attendeeName class=&quot;attendee-name&quot; placeholder=&quot;Name&quot;}}
-    &lt;button type=&quot;submit&quot; class=&quot;create&quot;&gt;Add&lt;/button&gt;
-  &lt;/form&gt;
+  <b>&lt;form {{action addContact on=&quot;submit&quot;}}&gt;
+    {{input type=&quot;text&quot; value=name id=&quot;name&quot; placeholder=&quot;Type Name...&quot;}}
+    &lt;button class=&quot;create&quot;&gt;Add Contact&lt;/button&gt;
+  &lt;/form&gt;</b>
 
   &lt;ul&gt;
   {{#each item in model}}
@@ -202,14 +212,16 @@ subtitle: TDD Results
 <pre class="prettyprint" data-lang="javascript">
 App.IndexRoute = Ember.Route.extend({
   model: function() {
-    return ['Eric', 'Ryan', 'Aaron'];
+    return ['Ryan', 'Stanley', 'Eric'];
   }
 });
 
 App.IndexController = Ember.ArrayController.extend({
   actions: {
-    addAttendee: function() {
-      this.pushObject(this.get('attendeeName'));
+    addContact: function() {
+      var name = this.get("name");
+      this.pushObject(name);
+      this.set("name", null);
     }
   }
 });
@@ -233,7 +245,7 @@ Ember.Test.registerHelper('shouldHaveElementWithCount',
   function(app, selector, n, context) {
     var el = findWithAssert(selector, context);
     var count = el.length;
-    equal(n, count, "found it " + count + " times");
+    equal(n, count, "found " + count + " times");
   }
 );
 
@@ -248,17 +260,15 @@ subtitle: Ember.Test.registerAsyncHelper
 Async Helpers will not run until prior async helpers complete.
 
 <pre class="prettyprint" data-lang="javascript">
-Ember.Test.<b>registerAsyncHelper</b>('addAttendee',
+Ember.Test.<b>registerAsyncHelper</b>('addContact',
   function(app, name, context) {
-    <b>Ember.run(function() {</b>
-      fillIn(".attendee-name", name);
-      click("button.create");
-    <b>});</b>
+    fillIn("#name", name);
+    click("button.create");
   }
 );
 
-// addAttendee("Stan");
-// addAttendee("Kyle");
+// addContact("Dan");
+// addContact("Deric");
 </pre>
 
 ---
@@ -273,22 +283,23 @@ title: Testing XMLHttpRequests
 subtitle: This works...
 
 <pre class="prettyprint" data-lang="javascript" style="margin-top: -20px;">
-App.Person = Ember.Object.extend({});
-App.Person.reopenClass({
+App.Contact = Ember.Object.extend({});
+App.Contact.reopenClass({
   find: function() {
-    var url = "http://addressbook-api.herokuapp.com/contacts";
-    return Ember.$.getJSON(url).then(function(data) {
-      var people = Em.A([]);
-      data.contacts.forEach(function(d) {
-        people.pushObject(App.Person.create(d));
-      }); 
-      return people;
-    });
+    var url = "http://addressbook-api.herokuapp.com/contacts",
+        contacts = Em.A([]);
+
+    Ember.$.getJSON(url).then(function(data) {
+      data.contacts.forEach(function(c) {
+        var contact = App.Contact.create(c);
+        contacts.pushObject(contact);
+      }.bind(this));
+    }.bind(this));
+
+    return contacts;
   }
 });
 </pre>
-
-[http://jsbin.com/OPeVeted/11](http://jsbin.com/OPeVeted/11/edit?html,js,output)
 
 ---
 
@@ -301,15 +312,15 @@ content_class:  vcenter
 </div>
 <br/>
 <pre class="prettyprint" data-lang="javascript">
-test("home page shows contacts", function() {
-  visit("/");
-  andThen(function() {
-    equal(find("ul li").length, 3, "three contacts are on the index page");
+  test("contact list appears on root url", function() {
+    expect(2);
+    visit("/");
+    andThen(function() {
+      shouldHaveElementWithCount("ul li", 3);
+      equal(find("ul li:first").text(), "Ryan", "Ryan is the first contact");
+    });
   });
-});
 </pre>
-
-[http://jsbin.com/OPeVeted/11](http://jsbin.com/OPeVeted/11/edit?html,js,output)
 
 ---
 
@@ -340,21 +351,25 @@ function ajax(url, options) {
 title: Testing XMLHttpRequests
 subtitle: Wrap Ember.$.ajax callbacks with Ember.run
 
-<iframe data-src="http://jsfiddle.net/cavneb/6mNHy/embedded/" style="margin-top:
+<iframe data-src="http://jsfiddle.net/cavneb/6mNHy/2/embedded/" style="margin-top:
 -20px; height: 430px;"></iframe>
 
 ---
 
 title: Testing XMLHttpRequests
 subtitle: ic-ajax
+build_lists: true
 
 ic-ajax is an Ember-friendly jQuery.ajax wrapper
 
 - returns RSVP promises
 - makes apps more testable (resolves promises with Ember.run)
 - makes testing ajax simpler with fixture support
+
+however, there are two exceptions which make it different
+
 - success and error callbacks are not supported
-- does not resolve three arguments like `$.ajax` (real promises only resolve a single value). `ic.ajax` only resolves the response data from the request, while `ic.ajax.raw` resolves an object with the three "arguments" as keys if you need them.
+- does not resolve three arguments like `$.ajax` (see next slide)
 
 <footer class="source"><a href="https://npmjs.org/package/ic-ajax">https://npmjs.org/package/ic-ajax</a></footer>
 
@@ -384,7 +399,7 @@ ajax.raw('/foo').then(function(result) {
 ---
 
 title: Testing XMLHttpRequests
-subtitle: ic-ajax
+subtitle: ic-ajax - Example Usage
 
 <pre class="prettyprint" data-lang="javascript" style="margin-top: -20px;">
 ic.ajax.defineFixture('api/v1/courses', {
@@ -405,51 +420,54 @@ ic.ajax('api/v1/courses').then(function(result) {
 title: Testing XMLHttpRequests
 subtitle: ic-ajax
 
+<article class="smaller">
 <pre class="prettyprint" data-lang="javascript" style="margin-top: -20px;">
-module("Integration: People", {
-    setup: function() {
-        ajax.defineFixture(contactsUrl, {
-            response: [
-                {first: 'Bob'},
-                {first: 'Jason'},
-                {first: 'Dan'}
-            ],
-            jqXHR: {},
-            textStatus: 'success'
-        });
-    },
-    teardown: function() {}
-});
-...
-</pre>
-
-<footer class="source"><a href="http://jsfiddle.net/cavneb/DvbGp/2/">http://jsfiddle.net/cavneb/DvbGp/2/</a></footer>
-
----
-
-title: Testing XMLHttpRequests
-subtitle: ic-ajax
-
-<pre class="prettyprint" data-lang="javascript" style="margin-top: -20px;">
-...
-test("home page shows contacts", function() {
-    visit("/");
-
-    andThen(function() {
-        equal(find("ul li").length, 3, "three contacts are on the index page");
-        equal(find("ul li:first").text(), "Bob", "first contact should be Bob");
+module("Integration - Contacts", {
+  setup: function() {
+    App.reset();
+    ajax.defineFixture("http://addressbook-api.herokuapp.com/contacts", {
+      response: { 
+        contacts: [
+          { first: "Bob" },
+          { first: "Jason" },
+          { first: "Dan" }
+        ]
+      },
+      jqXHR: {},
+      textStatus: "success"
     });
+  },
+  teardown: function() {}
 });
+...
 </pre>
-
-<footer class="source"><a href="http://jsfiddle.net/cavneb/DvbGp/2/">http://jsfiddle.net/cavneb/DvbGp/2/</a></footer>
+</article>
 
 ---
 
 title: Testing XMLHttpRequests
 subtitle: ic-ajax
 
-<iframe data-src="http://jsfiddle.net/cavneb/DvbGp/2/embedded/" style="margin-top:
+<pre class="prettyprint" data-lang="javascript" style="margin-top: -20px;">
+...
+test("contact list appears on root url", function() {
+  expect(2);
+
+  visit("/");
+  
+  andThen(function() {
+    shouldHaveElementWithCount("ul li", 3);
+    equal(find("ul li:first").text(), "Bob", "Bob is the first contact");
+  });
+});
+</pre>
+
+---
+
+title: Testing XMLHttpRequests
+subtitle: ic-ajax
+
+<iframe data-src="http://jsfiddle.net/cavneb/DvbGp/3/embedded/" style="margin-top:
 -20px; height: 430px;"></iframe>
 
 ---
@@ -531,11 +549,13 @@ class: segue dark nobackground
 
 title: Testing Routes
 
+<article class="smaller">
 <pre class="prettyprint" data-lang="javascript">
 var route, expectedModel;
 
 module("Unit: Index Route", {
   setup: function() {
+    App.reset();
     route = App.IndexRoute.create();
   },
   teardown: function() {
@@ -550,6 +570,7 @@ test("it exists", function() {
   ok(route instanceof Ember.Route);
 });
 </pre>
+</article>
 
 ---
 
@@ -558,14 +579,15 @@ subtitle:
 
 <pre class="prettyprint" data-lang="javascript">
 test("#model", sinon.test(function() {
-  expect(1);
+  expect(2);
 
-  expectedModel = [
-    { name: "Tyler" }
-  ];
+  var stub,
+      expectedModel = [
+        { first: "Jon" }
+      ];
 
-  <b>var stub = sinon.stub(App.Attendee, "find").returns(expectedModel);</b>
-
+  stub = sinon.stub(App.Contact, "find").returns(expectedModel);
+  
   equal(route.model(), expectedModel, "model is correct");
   ok(stub.called, "App.Attendee.find() was called");
 }));
